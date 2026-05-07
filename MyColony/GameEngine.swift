@@ -295,6 +295,8 @@ struct SaveState: Codable {
     let credits: Double
     let totalCredits: Double
     let charge: Double
+    let totalTaps: Int
+    let totalPurchases: Int
     let facilityLevels: [String: Int]
     let techLevels: [String: Int]
     let shipCounts: [String: Int]
@@ -312,6 +314,105 @@ struct SaveState: Codable {
     let safeCombo: Int
     let riskyCombo: Int
     let lastActiveAt: Date
+
+    init(
+        credits: Double,
+        totalCredits: Double,
+        charge: Double,
+        totalTaps: Int,
+        totalPurchases: Int,
+        facilityLevels: [String: Int],
+        techLevels: [String: Int],
+        shipCounts: [String: Int],
+        sessionDuration: TimeInterval,
+        lastPurchaseMessage: String,
+        unlockedAchievements: [String],
+        activeHazard: ColonyHazard?,
+        hazardsCleared: Int,
+        activeEvent: TimedCommandEvent?,
+        eventsResolved: Int,
+        autopilotTimeRemaining: TimeInterval,
+        autopilotSnapshotRate: Double,
+        nextHazardTime: TimeInterval,
+        nextEventTime: TimeInterval,
+        safeCombo: Int,
+        riskyCombo: Int,
+        lastActiveAt: Date
+    ) {
+        self.credits = credits
+        self.totalCredits = totalCredits
+        self.charge = charge
+        self.totalTaps = totalTaps
+        self.totalPurchases = totalPurchases
+        self.facilityLevels = facilityLevels
+        self.techLevels = techLevels
+        self.shipCounts = shipCounts
+        self.sessionDuration = sessionDuration
+        self.lastPurchaseMessage = lastPurchaseMessage
+        self.unlockedAchievements = unlockedAchievements
+        self.activeHazard = activeHazard
+        self.hazardsCleared = hazardsCleared
+        self.activeEvent = activeEvent
+        self.eventsResolved = eventsResolved
+        self.autopilotTimeRemaining = autopilotTimeRemaining
+        self.autopilotSnapshotRate = autopilotSnapshotRate
+        self.nextHazardTime = nextHazardTime
+        self.nextEventTime = nextEventTime
+        self.safeCombo = safeCombo
+        self.riskyCombo = riskyCombo
+        self.lastActiveAt = lastActiveAt
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case credits
+        case totalCredits
+        case charge
+        case totalTaps
+        case totalPurchases
+        case facilityLevels
+        case techLevels
+        case shipCounts
+        case sessionDuration
+        case lastPurchaseMessage
+        case unlockedAchievements
+        case activeHazard
+        case hazardsCleared
+        case activeEvent
+        case eventsResolved
+        case autopilotTimeRemaining
+        case autopilotSnapshotRate
+        case nextHazardTime
+        case nextEventTime
+        case safeCombo
+        case riskyCombo
+        case lastActiveAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        credits = try container.decode(Double.self, forKey: .credits)
+        totalCredits = try container.decode(Double.self, forKey: .totalCredits)
+        charge = try container.decode(Double.self, forKey: .charge)
+        totalTaps = try container.decodeIfPresent(Int.self, forKey: .totalTaps) ?? 0
+        totalPurchases = try container.decodeIfPresent(Int.self, forKey: .totalPurchases) ?? 0
+        facilityLevels = try container.decode([String: Int].self, forKey: .facilityLevels)
+        techLevels = try container.decode([String: Int].self, forKey: .techLevels)
+        shipCounts = try container.decode([String: Int].self, forKey: .shipCounts)
+        sessionDuration = try container.decode(TimeInterval.self, forKey: .sessionDuration)
+        lastPurchaseMessage = try container.decode(String.self, forKey: .lastPurchaseMessage)
+        unlockedAchievements = try container.decode([String].self, forKey: .unlockedAchievements)
+        activeHazard = try container.decodeIfPresent(ColonyHazard.self, forKey: .activeHazard)
+        hazardsCleared = try container.decode(Int.self, forKey: .hazardsCleared)
+        activeEvent = try container.decodeIfPresent(TimedCommandEvent.self, forKey: .activeEvent)
+        eventsResolved = try container.decode(Int.self, forKey: .eventsResolved)
+        autopilotTimeRemaining = try container.decode(TimeInterval.self, forKey: .autopilotTimeRemaining)
+        autopilotSnapshotRate = try container.decode(Double.self, forKey: .autopilotSnapshotRate)
+        nextHazardTime = try container.decode(TimeInterval.self, forKey: .nextHazardTime)
+        nextEventTime = try container.decode(TimeInterval.self, forKey: .nextEventTime)
+        safeCombo = try container.decode(Int.self, forKey: .safeCombo)
+        riskyCombo = try container.decode(Int.self, forKey: .riskyCombo)
+        lastActiveAt = try container.decode(Date.self, forKey: .lastActiveAt)
+    }
 }
 
 enum TechCategory: String, CaseIterable, Identifiable {
@@ -395,6 +496,8 @@ enum ShowcaseProfile: String {
 }
 
 final class MarsColonyModel: ObservableObject {
+    private static let firstEventLeadDelay: TimeInterval = 1.5
+
     private static let saveKey = "MyColony.SaveState.v1"
     private static let releaseResetKey = "MyColony.ReleaseReset.v1"
     private static let legacySaveKeys = [
@@ -416,6 +519,7 @@ final class MarsColonyModel: ObservableObject {
     @Published var baseTapPower: Double = 1
     @Published var tapPower: Double = 1
     @Published var totalTaps: Int = 0
+    @Published var totalPurchases: Int = 0
     @Published var facilityLevels: [String: Int] = [:]
     @Published var techLevels: [String: Int] = [:]
     @Published var shipCounts: [String: Int] = [:]
@@ -440,7 +544,7 @@ final class MarsColonyModel: ObservableObject {
     private var lastTick = Date()
     private var accumulatedSessionDuration: TimeInterval = 0
     private var nextHazardTime: TimeInterval = 34
-    private var nextEventTime: TimeInterval = 18
+    private var nextEventTime: TimeInterval = 0
     private var autopilotSnapshotRate: Double = 0
     private var lastSaveDate = Date.distantPast
 
@@ -724,6 +828,7 @@ final class MarsColonyModel: ObservableObject {
     func upgradeFacility(_ facility: FacilityDefinition) -> Bool {
         let cost = facilityCost(for: facility)
         guard spend(cost) else { return false }
+        totalPurchases += 1
         facilityLevels[facility.id, default: 0] += 1
         recalculateEconomy()
         registerSceneEvent(focus: facility.id)
@@ -735,6 +840,7 @@ final class MarsColonyModel: ObservableObject {
     func purchaseTech(_ tech: TechDefinition) -> Bool {
         let cost = techCost(for: tech)
         guard spend(cost) else { return false }
+        totalPurchases += 1
         techLevels[tech.id, default: 0] += 1
         recalculateEconomy()
         registerSceneEvent(focus: tech.id)
@@ -746,6 +852,7 @@ final class MarsColonyModel: ObservableObject {
     func purchaseShip(_ ship: ShipDefinition) -> Bool {
         let cost = shipCost(for: ship)
         guard spend(cost) else { return false }
+        totalPurchases += 1
         shipCounts[ship.id, default: 0] += 1
         recalculateEconomy()
         registerSceneEvent(focus: ship.id)
@@ -757,6 +864,7 @@ final class MarsColonyModel: ObservableObject {
     func purchaseAutopilot(_ offer: AutopilotOffer) -> Bool {
         guard spend(offer.cost) else { return false }
 
+        totalPurchases += 1
         let effectiveRate = offer.rate * passiveEfficiency()
         autopilotSnapshotRate = max(autopilotSnapshotRate, effectiveRate)
         autopilotTimeRemaining += offer.kind.duration
@@ -1280,6 +1388,8 @@ final class MarsColonyModel: ObservableObject {
             credits: credits,
             totalCredits: totalCredits,
             charge: charge,
+            totalTaps: totalTaps,
+            totalPurchases: totalPurchases,
             facilityLevels: facilityLevels,
             techLevels: techLevels,
             shipCounts: shipCounts,
@@ -1317,6 +1427,8 @@ final class MarsColonyModel: ObservableObject {
         credits = state.credits
         totalCredits = state.totalCredits
         charge = state.charge
+        totalTaps = state.totalTaps
+        totalPurchases = state.totalPurchases
         facilityLevels = state.facilityLevels
         techLevels = state.techLevels
         shipCounts = state.shipCounts
@@ -1331,7 +1443,11 @@ final class MarsColonyModel: ObservableObject {
         autopilotTimeRemaining = state.autopilotTimeRemaining
         autopilotSnapshotRate = state.autopilotSnapshotRate
         nextHazardTime = state.nextHazardTime
-        nextEventTime = state.nextEventTime
+        if state.eventsResolved == 0 && state.totalPurchases == 0 && state.totalTaps < 30 {
+            nextEventTime = sessionDuration + MarsColonyModel.firstEventLeadDelay
+        } else {
+            nextEventTime = state.nextEventTime
+        }
         safeCombo = state.safeCombo
         riskyCombo = state.riskyCombo
 
@@ -1367,13 +1483,13 @@ final class MarsColonyModel: ObservableObject {
                 activeEvent = event
             } else {
                 activeEvent = nil
-                nextEventTime = max(6, sessionDuration + 10)
+                nextEventTime = sessionDuration + 10
             }
         }
 
         autopilotTimeRemaining = max(0, autopilotTimeRemaining - elapsed)
         nextHazardTime = max(6, nextHazardTime - elapsed)
-        nextEventTime = max(6, nextEventTime - elapsed)
+        nextEventTime = max(0, nextEventTime - elapsed)
 
         if previousAutopilotTime > 0 && autopilotTimeRemaining == 0 {
             lastPurchaseMessage = "Autopilot contract closed while command was away. Manual extraction resumed on return."
@@ -1476,6 +1592,12 @@ final class MarsColonyModel: ObservableObject {
 
     private func maybeSpawnEvent() {
         guard activeEvent == nil else { return }
+        guard totalPurchases > 0 || totalTaps >= 30 else { return }
+
+        if eventsResolved == 0 {
+            nextEventTime = min(nextEventTime, sessionDuration + MarsColonyModel.firstEventLeadDelay)
+        }
+
         guard sessionDuration >= nextEventTime else { return }
 
         let type = CommandEventType.allCases.randomElement() ?? .salvageCache

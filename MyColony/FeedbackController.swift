@@ -16,7 +16,6 @@ enum GameFeedbackCue {
 
 final class FeedbackController: ObservableObject {
     private var players: [String: AVAudioPlayer] = [:]
-    private var ambientPlayers: [String: AVAudioPlayer] = [:]
     private let impactLight = UIImpactFeedbackGenerator(style: .light)
     private let impactMedium = UIImpactFeedbackGenerator(style: .medium)
     private let impactHeavy = UIImpactFeedbackGenerator(style: .rigid)
@@ -24,61 +23,58 @@ final class FeedbackController: ObservableObject {
     private let selection = UISelectionFeedbackGenerator()
 
     init() {
+        ColonyAudioSessionCoordinator.handleSceneBecameActive()
         impactLight.prepare()
         impactMedium.prepare()
         impactHeavy.prepare()
         notification.prepare()
         selection.prepare()
         ["coin_collect", "jelly_pop_1", "jelly_pop_2", "storm_burst", "syrup_squish"].forEach(loadPlayer(named:))
-        loadAmbientPlayer(named: "jelly_pop_2", key: "day")
-        loadAmbientPlayer(named: "storm_burst", key: "night")
-        loadAmbientPlayer(named: "coin_collect", key: "harbor")
-        loadAmbientPlayer(named: "syrup_squish", key: "reactor")
     }
 
     func play(_ cue: GameFeedbackCue) {
         switch cue {
         case .tapSuccess:
-            impactLight.impactOccurred(intensity: 0.72)
-            playSound(named: "jelly_pop_1")
+            impactLight.impactOccurred(intensity: 0.5)
+            playSound(named: "jelly_pop_1", volume: 0.18)
 
         case .tapDenied:
             notification.notificationOccurred(.warning)
-            playSound(named: "syrup_squish")
+            playSound(named: "syrup_squish", volume: 0.12)
 
         case .purchaseSuccess:
             selection.selectionChanged()
-            playSound(named: "coin_collect")
+            playSound(named: "coin_collect", volume: 0.22)
 
         case .autopilotPurchased:
-            impactMedium.impactOccurred(intensity: 0.8)
-            playSound(named: "coin_collect")
+            impactMedium.impactOccurred(intensity: 0.62)
+            playSound(named: "coin_collect", volume: 0.2)
 
         case .eventSafe:
             selection.selectionChanged()
-            playSound(named: "jelly_pop_2")
+            playSound(named: "jelly_pop_2", volume: 0.16)
 
         case .eventRiskySuccess:
             notification.notificationOccurred(.success)
-            playSound(named: "coin_collect")
+            playSound(named: "coin_collect", volume: 0.24)
 
         case .eventRiskyFail:
             notification.notificationOccurred(.error)
-            playSound(named: "storm_burst")
+            playSound(named: "storm_burst", volume: 0.14)
 
         case .hazardProgress:
-            impactMedium.impactOccurred(intensity: 0.95)
-            playSound(named: "jelly_pop_2")
+            impactMedium.impactOccurred(intensity: 0.58)
+            playSound(named: "jelly_pop_2", volume: 0.14)
 
         case .hazardResolved:
-            impactHeavy.impactOccurred(intensity: 1.0)
+            impactHeavy.impactOccurred(intensity: 0.72)
             notification.notificationOccurred(.success)
-            playSound(named: "storm_burst")
+            playSound(named: "storm_burst", volume: 0.18)
         }
     }
 
     private func loadPlayer(named name: String) {
-        guard let url = Bundle.main.url(forResource: name, withExtension: "wav", subdirectory: "Sounds") else { return }
+        guard let url = soundURL(named: name) else { return }
         do {
             let player = try AVAudioPlayer(contentsOf: url)
             player.prepareToPlay()
@@ -88,8 +84,9 @@ final class FeedbackController: ObservableObject {
         }
     }
 
-    private func playSound(named name: String) {
+    private func playSound(named name: String, volume: Float) {
         guard let player = players[name] else { return }
+        player.volume = volume
         player.currentTime = 0
         player.play()
     }
@@ -101,51 +98,20 @@ final class FeedbackController: ObservableObject {
         reactorLevel: Int,
         isSceneFocused: Bool
     ) {
-        let colonyActive = (currentTab == .base || currentTab == .colony) && isSceneFocused
-        let dayMix = colonyActive ? Float(max(0, 0.18 - sessionProgress * 0.12)) : 0
-        let nightMix = colonyActive ? Float(max(0, min(0.18, sessionProgress * 0.16))) : 0
-        let harborMix = colonyActive ? Float(min(0.14, Double(harborLevel) * 0.032)) : 0
-        let reactorMix = colonyActive ? Float(min(0.16, Double(reactorLevel) * 0.036)) : 0
-
-        setAmbientVolume(key: "day", volume: dayMix, rate: 0.78)
-        setAmbientVolume(key: "night", volume: nightMix, rate: 0.52)
-        setAmbientVolume(key: "harbor", volume: harborMix, rate: 0.9)
-        setAmbientVolume(key: "reactor", volume: reactorMix, rate: 0.68)
+        _ = currentTab
+        _ = sessionProgress
+        _ = harborLevel
+        _ = reactorLevel
+        _ = isSceneFocused
+        stopAmbient()
     }
 
-    func stopAmbient() {
-        ambientPlayers.values.forEach { player in
-            player.stop()
-            player.currentTime = 0
-        }
-    }
+    func stopAmbient() {}
 
-    private func loadAmbientPlayer(named resource: String, key: String) {
-        guard let url = Bundle.main.url(forResource: resource, withExtension: "wav", subdirectory: "Sounds") else { return }
-        do {
-            let player = try AVAudioPlayer(contentsOf: url)
-            player.numberOfLoops = -1
-            player.volume = 0
-            player.enableRate = true
-            player.prepareToPlay()
-            ambientPlayers[key] = player
-        } catch {
-            return
+    private func soundURL(named name: String) -> URL? {
+        if let nestedURL = Bundle.main.url(forResource: name, withExtension: "wav", subdirectory: "Sounds") {
+            return nestedURL
         }
-    }
-
-    private func setAmbientVolume(key: String, volume: Float, rate: Float) {
-        guard let player = ambientPlayers[key] else { return }
-        player.rate = rate
-        player.volume = volume
-        if volume > 0.001 {
-            if !player.isPlaying {
-                player.currentTime = 0
-                player.play()
-            }
-        } else if player.isPlaying {
-            player.stop()
-            player.currentTime = 0
-        }
+        return Bundle.main.url(forResource: name, withExtension: "wav")
     }
 }
