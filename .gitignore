@@ -1,0 +1,15 @@
+.DS_Store
+DerivedData/
+build/
+.build/
+.swiftpm/
+Package.resolved
+
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+
+*.moved-aside
+*.perspectivev3
+
+Marketing/**/*.mov

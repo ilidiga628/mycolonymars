@@ -1,0 +1,66 @@
+workflows:
+  ios-testflight:
+    name: My Colony iOS TestFlight
+    max_build_duration: 120
+    instance_type: mac_mini_m2
+
+    integrations:
+      app_store_connect: codemagic
+
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.ninemars.colony
+      vars:
+        XCODE_PROJECT: "MyColony.xcodeproj"
+        XCODE_SCHEME: "MyColony"
+        BUNDLE_ID: "com.ninemars.colony"
+      xcode: latest
+      cocoapods: default
+
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+
+    scripts:
+      - name: Show Xcode version
+        script: xcodebuild -version
+
+      - name: Resolve Swift packages
+        script: |
+          xcodebuild -project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            -resolvePackageDependencies
+
+      - name: Set up code signing
+        script: |
+          xcode-project use-profiles \
+            --project "$CM_BUILD_DIR/$XCODE_PROJECT"
+
+      - name: Increment build number
+        script: |
+          cd "$CM_BUILD_DIR"
+          BUILD_NUMBER="$(date +%Y%m%d%H%M)"
+          echo "Using CFBundleVersion=$BUILD_NUMBER"
+          agvtool new-version -all "$BUILD_NUMBER"
+
+      - name: Build IPA
+        script: |
+          xcode-project build-ipa \
+            --project "$CM_BUILD_DIR/$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        submit_to_app_store: false
