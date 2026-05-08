@@ -1,6 +1,6 @@
 workflows:
   ios-testflight:
-    name: My Colony iOS TestFlight
+    name: My Colony Mars iOS TestFlight
     max_build_duration: 120
     instance_type: mac_mini_m2
 
@@ -15,6 +15,8 @@ workflows:
         XCODE_PROJECT: "MyColony.xcodeproj"
         XCODE_SCHEME: "MyColony"
         BUNDLE_ID: "com.mycolony.farm"
+        APP_STORE_NAME: "My Colony: Mars"
+        APP_STORE_APPLE_ID: "6767503915"
       xcode: latest
       cocoapods: default
 
@@ -44,6 +46,11 @@ workflows:
         script: |
           cd "$CM_BUILD_DIR"
           BUILD_NUMBER="$(date +%Y%m%d%H%M)"
+          if [ -n "$APP_STORE_APPLE_ID" ]; then
+            LATEST_BUILD_NUMBER=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" || echo 0)
+            BUILD_NUMBER=$(("$LATEST_BUILD_NUMBER" + 1))
+          fi
+          echo "Preparing build for $APP_STORE_NAME"
           echo "Using CFBundleVersion=$BUILD_NUMBER"
           agvtool new-version -all "$BUILD_NUMBER"
 
