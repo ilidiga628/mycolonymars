@@ -1,37 +1,9 @@
 import SwiftUI
-import Combine
-
-enum LaunchShowcaseMode: Equatable {
-    case none
-    case tab(ShowcaseProfile)
-    case video
-    case fastVideo
-
-    static var current: LaunchShowcaseMode {
-        let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("--showcase-video-fast") {
-            return .fastVideo
-        }
-        if arguments.contains("--showcase-video") {
-            return .video
-        }
-
-        guard let index = arguments.firstIndex(of: "--showcase-tab"),
-              arguments.indices.contains(index + 1),
-              let profile = ShowcaseProfile(rawValue: arguments[index + 1]) else {
-            return .none
-        }
-
-        return .tab(profile)
-    }
-}
 
 struct CarnivalRootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var model = MarsColonyModel()
     @StateObject private var feedback = FeedbackController()
-    @State private var showcaseTask: Task<Void, Never>?
-    private let showcaseMode = LaunchShowcaseMode.current
 
     var body: some View {
         ZStack {
@@ -69,11 +41,7 @@ struct CarnivalRootView: View {
             }
         }
         .onAppear {
-            applyShowcaseIfNeeded()
             syncAmbient()
-        }
-        .onDisappear {
-            showcaseTask?.cancel()
         }
         .onChange(of: scenePhase) { phase in
             if phase != .active {
@@ -154,55 +122,12 @@ struct CarnivalRootView: View {
             isSceneFocused: scenePhase == .active
         )
     }
-
-    private func applyShowcaseIfNeeded() {
-        switch showcaseMode {
-        case .none:
-            return
-
-        case .tab(let profile):
-            model.applyShowcase(profile: profile)
-
-        case .video:
-            showcaseTask?.cancel()
-            model.applyShowcase(profile: .base)
-            showcaseTask = Task {
-                let sequence: [ShowcaseProfile] = [.base, .colony, .tech, .fleet, .logs, .base]
-                for profile in sequence.dropFirst() {
-                    try? await Task.sleep(nanoseconds: 3_200_000_000)
-                    guard !Task.isCancelled else { return }
-                    await MainActor.run {
-                        withAnimation(.spring(response: 0.48, dampingFraction: 0.9)) {
-                            model.applyShowcase(profile: profile)
-                        }
-                    }
-                }
-            }
-
-        case .fastVideo:
-            showcaseTask?.cancel()
-            model.applyShowcase(profile: .base)
-            showcaseTask = Task {
-                let sequence: [ShowcaseProfile] = [.base, .colony, .tech, .fleet, .logs, .base]
-                for profile in sequence.dropFirst() {
-                    try? await Task.sleep(nanoseconds: 1_700_000_000)
-                    guard !Task.isCancelled else { return }
-                    await MainActor.run {
-                        withAnimation(.spring(response: 0.34, dampingFraction: 0.9)) {
-                            model.applyShowcase(profile: profile)
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 struct BaseOverviewScreen: View {
     @ObservedObject var model: MarsColonyModel
     @ObservedObject var feedback: FeedbackController
     @State private var dismissedEventID: UUID?
-    private let showcaseMode = LaunchShowcaseMode.current
 
     var body: some View {
         ZStack(alignment: .top) {
@@ -238,10 +163,8 @@ struct BaseOverviewScreen: View {
                     ColonyStatusDeck(model: model)
                         .padding(.horizontal, 18)
 
-                    if !isShowcaseCapture {
-                        ComboMomentumCard(model: model)
-                            .padding(.horizontal, 18)
-                    }
+                    ComboMomentumCard(model: model)
+                        .padding(.horizontal, 18)
 
                     Button {
                         withAnimation(.spring(response: 0.3, dampingFraction: 0.84)) {
@@ -290,7 +213,7 @@ struct BaseOverviewScreen: View {
                     VStack(alignment: .leading, spacing: 14) {
                         SectionTitleView(
                             title: "Main Base",
-                            subtitle: "Upgrade surface infrastructure to grow tap yield, reactor charge and purchasable autopilot windows."
+                            subtitle: "Expand the colony core with upgrades that improve tap yield, charge capacity and contract strength."
                         )
 
                         ForEach(model.facilities) { facility in
@@ -381,10 +304,6 @@ struct BaseOverviewScreen: View {
         guard let event = model.activeEvent else { return nil }
         return dismissedEventID == event.id ? nil : event
     }
-
-    private var isShowcaseCapture: Bool {
-        showcaseMode != .none
-    }
 }
 
 struct TechTreeScreen: View {
@@ -444,7 +363,7 @@ struct ColonyOperationsScreen: View {
                 VStack(alignment: .leading, spacing: 14) {
                     SectionTitleView(
                         title: "Districts",
-                        subtitle: "See exactly how each colony structure is shaping charge, contracts and manual extraction."
+                        subtitle: "Track how each district improves charge, contracts and manual extraction in real time."
                     )
 
                     ForEach(model.facilities) { facility in
@@ -462,8 +381,8 @@ struct ColonyOperationsScreen: View {
 
                 VStack(alignment: .leading, spacing: 14) {
                     SectionTitleView(
-                        title: "Research VFX",
-                        subtitle: "Every tech branch now has a visible footprint in the colony scene and a readable gameplay effect."
+                        title: "Research Systems",
+                        subtitle: "Each research path changes the skyline and adds a clear gameplay bonus to the colony."
                     )
 
                     ForEach(model.techTree) { tech in
@@ -501,7 +420,7 @@ struct FleetMarketScreen: View {
                 VStack(alignment: .leading, spacing: 14) {
                     SectionTitleView(
                         title: "Shipyard",
-                        subtitle: "Deploy specialized ships to strengthen autopilot contracts, event odds and hazard response."
+                        subtitle: "Commission specialized ships to strengthen contracts, improve event outcomes and support hazard response."
                     )
 
                     ForEach(model.ships) { ship in
@@ -543,7 +462,7 @@ struct MissionLogsScreen: View {
                     ("Total Reactor Taps", "\(model.totalTaps)")
                 ])
 
-                StatListCard(title: "Mission Time", rows: [
+                StatListCard(title: "Session Summary", rows: [
                     ("Session Duration", model.durationText()),
                     ("Taps per Minute", "\(model.formatted(model.tapsPerMinute()))"),
                     ("Facility Levels", "\(model.totalFacilityLevels())"),
@@ -552,7 +471,7 @@ struct MissionLogsScreen: View {
                     ("Hazards Cleared", "\(model.hazardsCleared)")
                 ])
 
-                StatListCard(title: "Colony Stability", rows: [
+                StatListCard(title: "Command Status", rows: [
                     ("Charge", "\(Int(model.charge))/\(Int(model.maxCharge))"),
                     ("Charge Regen", "\(model.formatted(model.chargeRegenRate))/s"),
                     ("Autopilot Potential", "\(model.formatted(model.basePassiveRate))/s"),

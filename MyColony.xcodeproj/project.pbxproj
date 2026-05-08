@@ -184,13 +184,6 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		020000000000000000000170 /* XCLocalSwiftPackageReference "Packages/AnalyticsKit" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = Packages/AnalyticsKit;
-		};
-/* End XCLocalSwiftPackageReference section */
-
 /* Begin XCBuildConfiguration section */
 		020000000000000000000072 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -318,7 +311,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 723ADAF5P9;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "My Colony";
@@ -333,7 +326,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ninemars.colony;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mycolony.farm;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -352,7 +345,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 723ADAF5P9;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "My Colony";
@@ -367,7 +360,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.ninemars.colony;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mycolony.farm;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -402,10 +395,17 @@
 		};
 /* End XCConfigurationList section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		020000000000000000000170 /* XCLocalSwiftPackageReference "Packages/AnalyticsKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = Packages/AnalyticsKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		020000000000000000000171 /* AnalyticsKit */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 020000000000000000000170 /* XCLocalSwiftPackageReference "../../analytics-kit" */;
+			package = 020000000000000000000170 /* XCLocalSwiftPackageReference "Packages/AnalyticsKit" */;
 			productName = AnalyticsKit;
 		};
 /* End XCSwiftPackageProductDependency section */

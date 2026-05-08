@@ -554,7 +554,7 @@ struct AutopilotContractsCard: View {
                     .font(.system(size: 16, weight: .heavy, design: .rounded))
                     .foregroundStyle(.white)
 
-                Text("Passive credits are only available through temporary paid command windows.")
+                Text("Reserve income only runs during limited autopilot contracts.")
                     .font(.system(size: 14, weight: .medium, design: .rounded))
                     .foregroundStyle(.white.opacity(0.7))
                     .fixedSize(horizontal: false, vertical: true)
@@ -579,14 +579,14 @@ struct AutopilotContractsCard: View {
                                     .foregroundStyle(.white.opacity(0.68))
                                     .fixedSize(horizontal: false, vertical: true)
 
-                                Text("\(formatter(offer.rate))/s while active")
+                                Text("\(formatter(offer.rate))/s during contract")
                                     .font(.system(size: 16, weight: .bold, design: .rounded))
                                     .foregroundStyle(Color.marsHex(0xF97316))
                             }
                         }
 
                         UpgradeActionButton(
-                            title: "CONTRACT",
+                            title: "ACTIVATE",
                             costText: formatter(offer.cost),
                             accent: .marsHex(offer.kind.tintHex),
                             enabled: canAfford(offer),
@@ -2053,7 +2053,7 @@ struct UpgradeActionButton: View {
                 .lineLimit(2)
                 .minimumScaleFactor(0.78)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(enabled ? "Execute now" : "Need more reserves")
+            Text(enabled ? "Ready to deploy" : "More reserves required")
                 .font(.system(size: 12, weight: .bold, design: .rounded))
                 .foregroundStyle(.white.opacity(0.78))
                 .fixedSize(horizontal: false, vertical: true)
@@ -2195,6 +2195,10 @@ struct ShipCard: View {
     let enabled: Bool
     let action: () -> Void
 
+    private var actionAccent: Color {
+        ship.tintHex >= 0xF0F0F0 ? .marsHex(0x1D4ED8) : .marsHex(ship.tintHex)
+    }
+
     var body: some View {
         GlassPanel {
             VStack(alignment: .leading, spacing: 16) {
@@ -2231,7 +2235,7 @@ struct ShipCard: View {
                 UpgradeActionButton(
                     title: "BUY",
                     costText: costText,
-                    accent: .marsHex(ship.tintHex),
+                    accent: actionAccent,
                     enabled: enabled,
                     action: action
                 )

@@ -213,64 +213,64 @@ enum CommandEventType: String, CaseIterable, Codable {
         case .salvageCache:
             return "Salvage Ping"
         case .blackMarketCell:
-            return "Black Market Cell"
+            return "Gray Market Cells"
         case .relayGamble:
-            return "Relay Cipher"
+            return "Relay Override"
         }
     }
 
     var detail: String {
         switch self {
         case .salvageCache:
-            return "A derelict cache drifted into scan range. Secure it or overclock the salvage run."
+            return "A drifting cargo cache has entered scan range. Play it safe or push for a bigger haul."
         case .blackMarketCell:
-            return "A smugglers' cell offers unstable charge packs and temporary reactor automation."
+            return "Off-grid merchants are offering unstable power cells and a short automation boost."
         case .relayGamble:
-            return "A shadow relay proposes a risky uplink rewrite for outsized colony output."
+            return "A rogue relay patch could unlock a major output spike if the rewrite holds."
         }
     }
 
     var safeTitle: String {
         switch self {
         case .salvageCache:
-            return "Secure haul"
+            return "Secure the cargo"
         case .blackMarketCell:
-            return "Pay for clean cells"
+            return "Buy certified cells"
         case .relayGamble:
-            return "Patch the relay"
+            return "Stabilize the relay"
         }
     }
 
     var safeDetail: String {
         switch self {
         case .salvageCache:
-            return "Smaller reserve gain, no downside."
+            return "Take a smaller payout with no added risk."
         case .blackMarketCell:
-            return "Spend reserves for a full recharge and a short autopilot burst."
+            return "Spend reserves for a full recharge and a brief contract boost."
         case .relayGamble:
-            return "Stable autopilot boost with no incident."
+            return "Gain a stable contract boost with no incident."
         }
     }
 
     var riskyTitle: String {
         switch self {
         case .salvageCache:
-            return "Hot extract"
+            return "Overclock the haul"
         case .blackMarketCell:
-            return "Take contraband"
+            return "Run contraband"
         case .relayGamble:
-            return "Overclock rewrite"
+            return "Force the rewrite"
         }
     }
 
     var riskyDetail: String {
         switch self {
         case .salvageCache:
-            return "Big reward, but sand exposure can trigger a storm."
+            return "Higher payout, but the run may trigger a dust front."
         case .blackMarketCell:
-            return "Free power if it works, flare trouble if it does not."
+            return "Huge upside if it holds, but failure can trigger a solar flare."
         case .relayGamble:
-            return "Massive output spike or a coolant incident."
+            return "Major output spike or a coolant breach."
         }
     }
 
@@ -487,19 +487,11 @@ struct AchievementDefinition: Identifiable {
     let icon: String
 }
 
-enum ShowcaseProfile: String {
-    case base
-    case colony
-    case tech
-    case fleet
-    case logs
-}
-
 final class MarsColonyModel: ObservableObject {
     private static let firstEventLeadDelay: TimeInterval = 1.5
 
     private static let saveKey = "MyColony.SaveState.v1"
-    private static let releaseResetKey = "MyColony.ReleaseReset.v1"
+    private static let releaseResetKey = "MyColony.ReleaseReset.v3"
     private static let legacySaveKeys = [
         "NineMars.SaveState",
         "NineMars.LocalMidgameSeed.v1",
@@ -525,7 +517,7 @@ final class MarsColonyModel: ObservableObject {
     @Published var shipCounts: [String: Int] = [:]
     @Published var sessionDuration: TimeInterval = 0
     @Published var lastTapGain: Double = 0
-    @Published var lastPurchaseMessage: String = "Colony online. Command charge stable."
+    @Published var lastPurchaseMessage: String = "Colony online. All command systems are stable."
     @Published var reactorPulse: Int = 0
     @Published var lastCoreTapAt: Date = .distantPast
     @Published var unlockedAchievements: Set<String> = []
@@ -552,7 +544,7 @@ final class MarsColonyModel: ObservableObject {
         FacilityDefinition(
             id: "extractor",
             title: "Helios Extractor",
-            subtitle: "Surface drills turn regolith into reserve credits when command taps punch through.",
+            subtitle: "Surface drills convert Martian regolith into reserve income with every successful tap.",
             icon: "sun.max.fill",
             tintHex: 0xF59E0B,
             baseCost: 110,
@@ -565,7 +557,7 @@ final class MarsColonyModel: ObservableObject {
         FacilityDefinition(
             id: "reactor",
             title: "Blue Reactor",
-            subtitle: "Stabilized reactor drums expand usable charge and refill tempo.",
+            subtitle: "Reactor stabilization increases charge capacity and improves recovery speed.",
             icon: "bolt.fill",
             tintHex: 0x2563EB,
             baseCost: 360,
@@ -578,7 +570,7 @@ final class MarsColonyModel: ObservableObject {
         FacilityDefinition(
             id: "harbor",
             title: "Orbital Harbor",
-            subtitle: "Dock routing improves convoy autopilot contracts and risky uplink odds.",
+            subtitle: "Orbital traffic control improves contract output and supports higher-risk plays.",
             icon: "antenna.radiowaves.left.and.right",
             tintHex: 0xF97316,
             baseCost: 1_350,
@@ -595,7 +587,7 @@ final class MarsColonyModel: ObservableObject {
             id: "solar_array",
             category: .infrastructure,
             title: "Solar Array",
-            subtitle: "Raises the baseline for purchasable autopilot windows.",
+            subtitle: "Raises the baseline output of every contract window.",
             icon: "sun.max.fill",
             tintHex: 0xF59E0B,
             baseCost: 160,
@@ -609,7 +601,7 @@ final class MarsColonyModel: ObservableObject {
             id: "fusion_cell",
             category: .infrastructure,
             title: "Fusion Cell",
-            subtitle: "Deep reserves increase max charge and reactor refill quality.",
+            subtitle: "Expands charge reserves and improves reactor recovery.",
             icon: "atom",
             tintHex: 0x60A5FA,
             baseCost: 820,
@@ -623,7 +615,7 @@ final class MarsColonyModel: ObservableObject {
             id: "plasma_conduit",
             category: .infrastructure,
             title: "Plasma Conduit",
-            subtitle: "Reduces autopilot loss and strengthens timed contracts.",
+            subtitle: "Improves contract efficiency and strengthens timed opportunities.",
             icon: "dot.radiowaves.left.and.right",
             tintHex: 0xFB923C,
             baseCost: 3_800,
@@ -637,7 +629,7 @@ final class MarsColonyModel: ObservableObject {
             id: "quantum_core",
             category: .infrastructure,
             title: "Quantum Core",
-            subtitle: "Executive-grade field sync makes premium autopilot windows explosive.",
+            subtitle: "High-end field sync turns premium contracts into major output spikes.",
             icon: "sparkles.square.filled.on.square",
             tintHex: 0xFFFFFF,
             baseCost: 15_000,
@@ -651,7 +643,7 @@ final class MarsColonyModel: ObservableObject {
             id: "hand_drill",
             category: .extraction,
             title: "Hand Drill",
-            subtitle: "Starter drill assemblies increase reserve yield per tap.",
+            subtitle: "Improves the reserve yield of every manual extraction tap.",
             icon: "hammer.fill",
             tintHex: 0xF97316,
             baseCost: 100,
@@ -665,7 +657,7 @@ final class MarsColonyModel: ObservableObject {
             id: "servo_glove",
             category: .extraction,
             title: "Servo Glove",
-            subtitle: "Operators recover charge faster between command bursts.",
+            subtitle: "Reduces downtime by improving charge recovery between tap bursts.",
             icon: "hand.raised.fill",
             tintHex: 0x2563EB,
             baseCost: 760,
@@ -679,7 +671,7 @@ final class MarsColonyModel: ObservableObject {
             id: "pneumo_drill",
             category: .extraction,
             title: "Pneumo Drill",
-            subtitle: "Industrial pulses turn each live tap into a premium payout.",
+            subtitle: "Industrial pulse drilling dramatically increases high-value tap output.",
             icon: "wrench.and.screwdriver.fill",
             tintHex: 0xF59E0B,
             baseCost: 2_500,
@@ -695,7 +687,7 @@ final class MarsColonyModel: ObservableObject {
         ShipDefinition(
             id: "scout_pod",
             title: "Scout Pod",
-            subtitle: "Recon craft improve event quality and short autopilot output.",
+            subtitle: "Fast recon craft improve event quality and boost short contracts.",
             icon: "paperplane.fill",
             tintHex: 0x60A5FA,
             baseCost: 175,
@@ -705,7 +697,7 @@ final class MarsColonyModel: ObservableObject {
         ShipDefinition(
             id: "mining_drone",
             title: "Mining Drone",
-            subtitle: "Drone swarms amplify salvage bursts and dust clear operations.",
+            subtitle: "Autonomous drones improve salvage runs and hazard response.",
             icon: "gearshape.2.fill",
             tintHex: 0xF59E0B,
             baseCost: 760,
@@ -715,7 +707,7 @@ final class MarsColonyModel: ObservableObject {
         ShipDefinition(
             id: "ore_hauler",
             title: "Ore Hauler",
-            subtitle: "Cargo hulls make long autopilot contracts materially stronger.",
+            subtitle: "Heavy cargo hulls increase the value of longer contract windows.",
             icon: "shippingbox.fill",
             tintHex: 0xF97316,
             baseCost: 4_500,
@@ -725,7 +717,7 @@ final class MarsColonyModel: ObservableObject {
         ShipDefinition(
             id: "battle_cruiser",
             title: "Battle Cruiser",
-            subtitle: "Escort-class carriers harden risky plays and hazard containment runs.",
+            subtitle: "Escort-class warships stabilize risky decisions and hazard operations.",
             icon: "shield.lefthalf.filled",
             tintHex: 0xFFFFFF,
             baseCost: 25_000,
@@ -735,7 +727,7 @@ final class MarsColonyModel: ObservableObject {
         ShipDefinition(
             id: "dreadnought",
             title: "Dreadnought",
-            subtitle: "Flagship decks supercharge contract windows and crisis recovery.",
+            subtitle: "Flagship-class vessels supercharge contract output and crisis recovery.",
             icon: "sparkles.tv.fill",
             tintHex: 0x2563EB,
             baseCost: 200_000,
@@ -745,12 +737,12 @@ final class MarsColonyModel: ObservableObject {
     ]
 
     let achievements: [AchievementDefinition] = [
-        AchievementDefinition(id: "first_tap", title: "First Contact", detail: "Tap the core once", icon: "hand.tap.fill"),
-        AchievementDefinition(id: "five_facility", title: "Industrial Dawn", detail: "Reach 5 total facility levels", icon: "building.2.fill"),
-        AchievementDefinition(id: "fleet_three", title: "Skyline Ready", detail: "Own 3 ships", icon: "airplane.departure"),
-        AchievementDefinition(id: "tech_four", title: "Research Pulse", detail: "Buy 4 tech levels", icon: "point.3.connected.trianglepath.dotted"),
-        AchievementDefinition(id: "credits_10k", title: "Ten-K Reserve", detail: "Accumulate 10K total credits", icon: "bolt.circle.fill"),
-        AchievementDefinition(id: "hazard_clear", title: "Stormbreaker", detail: "Resolve 3 colony hazards", icon: "checkmark.shield.fill")
+        AchievementDefinition(id: "first_tap", title: "First Contact", detail: "Complete your first core extraction.", icon: "hand.tap.fill"),
+        AchievementDefinition(id: "five_facility", title: "Industrial Dawn", detail: "Reach 5 total district upgrade levels.", icon: "building.2.fill"),
+        AchievementDefinition(id: "fleet_three", title: "Skyline Ready", detail: "Deploy 3 ships to the colony fleet.", icon: "airplane.departure"),
+        AchievementDefinition(id: "tech_four", title: "Research Pulse", detail: "Unlock 4 total research levels.", icon: "point.3.connected.trianglepath.dotted"),
+        AchievementDefinition(id: "credits_10k", title: "Ten-K Reserve", detail: "Accumulate 10K total reserves.", icon: "bolt.circle.fill"),
+        AchievementDefinition(id: "hazard_clear", title: "Stormbreaker", detail: "Resolve 3 live colony hazards.", icon: "checkmark.shield.fill")
     ]
 
     init() {
@@ -771,7 +763,7 @@ final class MarsColonyModel: ObservableObject {
     func mineCore() -> Bool {
         let cost = tapChargeCost()
         guard charge >= cost else {
-            lastPurchaseMessage = "Reactor charge depleted. Wait for recharge or buy a clean cell window."
+            lastPurchaseMessage = "Charge depleted. Wait for recovery or activate a support contract."
             return false
         }
 
@@ -783,7 +775,7 @@ final class MarsColonyModel: ObservableObject {
         lastTapGain = gain
         reactorPulse += 1
         lastCoreTapAt = Date()
-        lastPurchaseMessage = "Manual extraction delivered +\(formatted(gain)) credits."
+        lastPurchaseMessage = "Manual extraction complete: +\(formatted(gain)) reserves."
         evaluateAchievements()
         persistIfNeeded(force: true)
         return true
@@ -793,7 +785,7 @@ final class MarsColonyModel: ObservableObject {
         guard var hazard = activeHazard else { return .denied }
         let cost = max(1.2, tapChargeCost() + 0.4)
         guard charge >= cost else {
-            lastPurchaseMessage = "Containment needs more live charge before teams can respond."
+            lastPurchaseMessage = "Containment teams need more live charge before they can deploy."
             return .denied
         }
 
@@ -812,13 +804,13 @@ final class MarsColonyModel: ObservableObject {
             hazardsCleared += 1
             credits += hazard.reward
             totalCredits += hazard.reward
-            lastPurchaseMessage = "\(hazard.type.title) contained around \(hazard.affectedSystem). +\(formatted(hazard.reward)) credits secured."
+            lastPurchaseMessage = "\(hazard.type.title) contained near \(hazard.affectedSystem). +\(formatted(hazard.reward)) reserves secured."
             recalculateEconomy()
             persistIfNeeded(force: true)
             return .resolved
         } else {
             activeHazard = hazard
-            lastPurchaseMessage = "\(hazard.type.title) mitigation in progress around \(hazard.affectedSystem). \(hazard.remainingActions) actions left."
+            lastPurchaseMessage = "\(hazard.type.title) response in progress near \(hazard.affectedSystem). \(hazard.remainingActions) actions remaining."
             recalculateEconomy()
             persistIfNeeded(force: true)
             return .progress
@@ -856,7 +848,7 @@ final class MarsColonyModel: ObservableObject {
         shipCounts[ship.id, default: 0] += 1
         recalculateEconomy()
         registerSceneEvent(focus: ship.id)
-        lastPurchaseMessage = "\(ship.title) deployed to the Martian network."
+        lastPurchaseMessage = "\(ship.title) deployed to the colony fleet."
         persistIfNeeded(force: true)
         return true
     }
@@ -873,83 +865,9 @@ final class MarsColonyModel: ObservableObject {
         }
         recalculateEconomy()
         registerSceneEvent(focus: "harbor")
-        lastPurchaseMessage = "\(offer.kind.title) contracted for \(Int(offer.kind.duration))s at \(formatted(effectiveRate))/s."
+        lastPurchaseMessage = "\(offer.kind.title) activated for \(Int(offer.kind.duration)) seconds at \(formatted(effectiveRate))/s."
         persistIfNeeded(force: true)
         return true
-    }
-
-    func applyShowcase(profile: ShowcaseProfile) {
-        facilityLevels = [
-            "extractor": 5,
-            "reactor": 4,
-            "harbor": 3
-        ]
-
-        techLevels = [
-            "solar_array": 4,
-            "fusion_cell": 3,
-            "plasma_conduit": 2,
-            "quantum_core": 1,
-            "hand_drill": 4,
-            "servo_glove": 3,
-            "pneumo_drill": 2
-        ]
-
-        shipCounts = [
-            "scout_pod": 6,
-            "mining_drone": 4,
-            "ore_hauler": 3,
-            "battle_cruiser": 2,
-            "dreadnought": 1
-        ]
-
-        credits = 186_400
-        totalCredits = max(totalCredits, 742_000)
-        totalTaps = max(totalTaps, 3_240)
-        hazardsCleared = max(hazardsCleared, 7)
-        eventsResolved = max(eventsResolved, 11)
-        safeCombo = 4
-        riskyCombo = 2
-        accumulatedSessionDuration = 548
-        sessionDuration = accumulatedSessionDuration
-        unlockedAchievements = Set(achievements.map(\.id))
-        activeHazard = nil
-        activeEvent = nil
-        autopilotTimeRemaining = 42
-        autopilotSnapshotRate = 26.8
-        nextHazardTime = sessionDuration + 28
-        nextEventTime = sessionDuration + 18
-        lastPurchaseMessage = "Showcase mode active. My Colony command sectors are synced for capture."
-
-        recalculateEconomy()
-        charge = maxCharge
-        lastTapGain = tapPower
-        lastCoreTapAt = Date()
-
-        switch profile {
-        case .base:
-            currentTab = .base
-            colonySceneFocus = "reactor"
-
-        case .colony:
-            currentTab = .colony
-            colonySceneFocus = "harbor"
-
-        case .tech:
-            currentTab = .tech
-            colonySceneFocus = "solar_array"
-
-        case .fleet:
-            currentTab = .fleet
-            colonySceneFocus = "dreadnought"
-
-        case .logs:
-            currentTab = .logs
-            colonySceneFocus = "fleet"
-        }
-
-        colonyScenePulse += 1
-        colonySceneEventDate = Date()
     }
 
     func resolveEvent(safeChoice: Bool) -> EventResolutionResult {
@@ -1193,21 +1111,21 @@ final class MarsColonyModel: ObservableObject {
     }
 
     func comboMomentumTitle() -> String {
-        if riskyCombo >= 4 { return "Risk Chain Surging" }
-        if riskyCombo > 0 { return "Risk Chain Online" }
+        if riskyCombo >= 4 { return "High-Risk Chain" }
+        if riskyCombo > 0 { return "Risk Chain Active" }
         if safeCombo >= 3 { return "Safe Chain Stable" }
         if safeCombo > 0 { return "Safe Chain Building" }
-        return "Momentum Idle"
+        return "Momentum Ready"
     }
 
     func comboMomentumDetail() -> String {
         if riskyCombo > 0 {
-            return "Risk streaks amplify event payouts and keep late-session spikes exciting."
+            return "Risk chains increase event payouts and raise the upside of late-session decisions."
         }
         if safeCombo > 0 {
-            return "Safe streaks feed bonus credits and recharge bursts every third decision."
+            return "Safe chains grant bonus reserves and charge bursts every third decision."
         }
-        return "Timed decisions build streaks that shape your 5-10 minute command run."
+        return "Timed decisions build momentum that shapes each 5-10 minute command run."
     }
 
     func comboProgress() -> Double {
@@ -1244,13 +1162,13 @@ final class MarsColonyModel: ObservableObject {
         let current = accumulatedSessionDuration
         switch sessionTier() {
         case 1:
-            return "Tier II in ~\(max(0, Int(ceil((120 - current) / 60))))m: faster events and denser upgrades."
+            return "Tier II in ~\(max(0, Int(ceil((120 - current) / 60))))m: more events and stronger upgrade pacing."
         case 2:
-            return "Tier III unlocks Capital Window and harder spikes after ~\(max(0, Int(ceil((300 - current) / 60))))m."
+            return "Tier III in ~\(max(0, Int(ceil((300 - current) / 60))))m: Capital Contracts and higher pressure unlock."
         case 3:
-            return "Tier IV pushes hazard pressure and premium contract tempo in ~\(max(0, Int(ceil((480 - current) / 60))))m."
+            return "Tier IV in ~\(max(0, Int(ceil((480 - current) / 60))))m: peak hazard pressure and contract tempo."
         default:
-            return "Tier IV active: full session pressure and top-end contract cadence online."
+            return "Tier IV active: full colony pressure and top-end contract cadence online."
         }
     }
 
@@ -1457,6 +1375,7 @@ final class MarsColonyModel: ObservableObject {
 
     private func clearLegacyProgressIfNeeded() {
         guard UserDefaults.standard.bool(forKey: Self.releaseResetKey) == false else { return }
+        UserDefaults.standard.removeObject(forKey: Self.saveKey)
         Self.legacySaveKeys.forEach { key in
             UserDefaults.standard.removeObject(forKey: key)
         }

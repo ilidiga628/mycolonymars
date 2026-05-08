@@ -10,11 +10,11 @@ workflows:
     environment:
       ios_signing:
         distribution_type: app_store
-        bundle_identifier: com.ninemars.colony
+        bundle_identifier: com.mycolony.farm
       vars:
         XCODE_PROJECT: "MyColony.xcodeproj"
         XCODE_SCHEME: "MyColony"
-        BUNDLE_ID: "com.ninemars.colony"
+        BUNDLE_ID: "com.mycolony.farm"
       xcode: latest
       cocoapods: default
 
